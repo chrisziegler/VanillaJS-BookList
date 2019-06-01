@@ -1,0 +1,140 @@
+// Book Class: Represents/Instantiates a new Book
+class Book {
+  constructor(title, author, isbn) {
+    this.title = title;
+    this.author = author;
+    this.isbn = isbn;
+  }
+}
+
+// Store Class: Handles Storage
+class Store {
+  static getBooks() {
+    // const books = JSON.parse(localStorage.getItem('books') || [];
+    let books;
+    if (localStorage.getItem('books') === null) {
+      books = [];
+    } else {
+      books = JSON.parse(localStorage.getItem('books'));
+    }
+    return books;
+  }
+
+  static addBook(book) {
+    const books = Store.getBooks();
+    books.push(book);
+    localStorage.setItem('books', JSON.stringify(books));
+  }
+
+  static removeBook(isbn) {
+    const books = Store.getBooks();
+    const filtered = books.filter(book => book.isbn !== isbn);
+    localStorage.setItem('books', JSON.stringify(filtered));
+  }
+}
+
+// UI Class: Handle UI Tasks
+// static methods so we don't need to instantiate UI class
+class UI {
+  static displayBooks() {
+    // hardcoded for now - just pretend this is localStorage
+    // const storedBooks = [
+    //   {
+    //     title: 'Dune',
+    //     author: 'Frank Herbert',
+    //     isbn: '3432434'
+    //   },
+    //   {
+    //     title: '2001: A Space Odysey',
+    //     author: 'Arthur C. Clarke',
+    //     isbn: '435324'
+    //   }
+    // ];
+    const books = Store.getBooks();
+    books.forEach(book => UI.addBookToList(book));
+  }
+
+  static addBookToList(book) {
+    // create a row to add to tbody
+    const list = document.querySelector('#book-list');
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${book.title}</td>
+      <td>${book.author}</td>
+      <td>${book.isbn}</td>
+      <td><a href="#" class="btn btn-danger btn-sm delete">x</a></td>
+    `;
+    list.appendChild(row);
+  }
+
+  static deleteBook(el) {
+    if (el.classList.contains('delete')) {
+      const tr = el.parentElement.parentElement;
+      const isbn = tr.children[2].computedName;
+      const title = tr.childNodes[1].computedName;
+      tr.remove();
+      UI.showAlert(`${title} has been removed`, 'success');
+    }
+  }
+
+  static showAlert(message, className) {
+    const div = document.createElement('div');
+    div.className = `alert alert-${className}`;
+    div.appendChild(document.createTextNode(message));
+    const container = document.querySelector('.container');
+    const form = document.querySelector('#book-form');
+    container.insertBefore(div, form);
+    setTimeout(() => document.querySelector('.alert').remove(), 3000);
+  }
+
+  static clearFields() {
+    document.querySelector('#title').value = '';
+    document.querySelector('#author').value = '';
+    document.querySelector('#isbn').value = '';
+  }
+}
+
+// Event: display default books from data
+document.addEventListener('DOMContentLoaded', UI.displayBooks);
+
+// Event: Add a Book on submit from form
+document.querySelector('#book-form').addEventListener('submit', e => {
+  e.preventDefault();
+
+  // get form values
+  const title = document.querySelector('#title').value;
+  const author = document.querySelector('#author').value;
+  const isbn = document.querySelector('#isbn').value;
+
+  // validate
+  if (title === '' || author === '' || isbn === '') {
+    UI.showAlert('Please fill in all fields', 'danger');
+  } else {
+    // instantiate a book
+    const book = new Book(title, author, isbn);
+
+    // add book to UI
+    UI.addBookToList(book);
+
+    // store book
+    Store.addBook(book);
+
+    // show success message
+    UI.showAlert(`Successfully added ${book.title}`, 'success');
+    UI.clearFields();
+  }
+});
+
+// event: remove a book from list and Storage
+document.querySelector('#book-list').addEventListener('click', e => {
+  // remove book from UI
+  UI.deleteBook(e.target);
+
+  // remove book from Store
+  // the target is the button, the paraent is the <td>, its previousElementSibling
+  //  is the <td> before the delete button in that same row, textContent is isbn string
+  // console.log(e.target.parentElement.previousElementSibling);
+  Store.removeBook(
+    e.target.parentElement.previousElementSibling.textContent,
+  );
+});
