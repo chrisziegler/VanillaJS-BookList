@@ -10,14 +10,7 @@ class Book {
 // Store Class: Handles Storage
 class Store {
   static getBooks() {
-    // const books = JSON.parse(localStorage.getItem('books') || [];
-    let books;
-    if (localStorage.getItem('books') === null) {
-      books = [];
-    } else {
-      books = JSON.parse(localStorage.getItem('books'));
-    }
-    return books;
+    return JSON.parse(localStorage.getItem('books')) || [];
   }
 
   static addBook(book) {
@@ -34,22 +27,8 @@ class Store {
 }
 
 // UI Class: Handle UI Tasks
-// static methods so we don't need to instantiate UI class
 class UI {
   static displayBooks() {
-    // hardcoded for now - just pretend this is localStorage
-    // const storedBooks = [
-    //   {
-    //     title: 'Dune',
-    //     author: 'Frank Herbert',
-    //     isbn: '3432434'
-    //   },
-    //   {
-    //     title: '2001: A Space Odysey',
-    //     author: 'Arthur C. Clarke',
-    //     isbn: '435324'
-    //   }
-    // ];
     const books = Store.getBooks();
     books.forEach(book => UI.addBookToList(book));
   }
@@ -129,11 +108,7 @@ document.querySelector('#book-form').addEventListener('submit', e => {
 document.querySelector('#book-list').addEventListener('click', e => {
   // remove book from UI
   UI.deleteBook(e.target);
-
-  // remove book from Store
-  // the target is the button, the paraent is the <td>, its previousElementSibling
-  //  is the <td> before the delete button in that same row, textContent is isbn string
-  // console.log(e.target.parentElement.previousElementSibling);
+  // remove book from localStorage
   Store.removeBook(
     e.target.parentElement.previousElementSibling.textContent,
   );
